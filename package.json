@@ -1,6 +1,6 @@
 {
   "name": "dsh-skin-whale-fantasy",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "description": "Whale-girl fantasy wallpaper for DSH Desktop: whale-girl video wallpaper behind a glass UI, with every low-contrast surface fixed for a dark backdrop. Standalone, self-contained host plugin.",
   "type": "module",
   "main": "./index.js",

@@ -356,3 +356,54 @@ html[data-dsvs='on'] [data-conversation-panel] :where(code, kbd, samp, [class*='
 }
 html[data-dsvs='on'] [data-conversation-panel] [class*='fileMention'],
 html[data-dsvs='on'] [data-conversation-panel] a { color: #8fc4ff !important; }
+
+/* ------------------------------------------------------------------
+   宿主注入的壁纸层兜底定位。
+   index.js 会 body.prepend 一个 [data-dsh-skin-layer="background"] 的
+   div + video，但插件本身没给它任何定位样式：一旦别的皮肤/运行时不再
+   替它铺满屏幕，这层就变成 0 宽、但里面的 video 仍按原始比例撑出
+   859px 高，把 #root 整体顶到第二屏去（看起来就是「界面只剩壁纸」）。
+   这里把它钉回全屏固定层，任何环境下都不会挤占文档流。
+   ------------------------------------------------------------------ */
+[data-dsh-skin-layer='background'] {
+  position: fixed !important;
+  inset: 0 !important;
+  width: 100vw !important;
+  height: 100vh !important;
+  overflow: hidden !important;
+  pointer-events: none !important;
+  z-index: -1 !important;
+  background-color: transparent !important;
+}
+
+[data-dsh-skin-layer='background'] > video {
+  position: absolute !important;
+  inset: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: cover !important;
+  display: block !important;
+  margin: 0 !important;
+  opacity: 1 !important;
+}
+
+/* 代码块：上游只给了 1b1b1ccc 的深底，正文近黑压在上面几乎看不见。
+   底色略提亮 + 浅色字，块内保持等宽字体。 */
+html[data-dsvs='on'] [data-conversation-panel] :where(pre, [class*='markdown-code'], [class*='_codeBlock']) {
+  background-color: rgba(10, 14, 22, 0.82) !important;
+  border: 1px solid rgba(255, 255, 255, 0.14) !important;
+  border-radius: 8px !important;
+}
+html[data-dsvs='on'] [data-conversation-panel] :where(pre, [class*='markdown-code'], [class*='_codeBlock']) :where(code, span, div) {
+  color: #dbe7f6 !important;
+  background: transparent !important;
+  border: 0 !important;
+}
+
+/* 代码块头部（语言标签 + 复制按钮）也一起纳入同一块深玻璃，别让它在壁纸上晃 */
+html[data-dsvs='on'] [class*='_plain_']:has(> pre),
+html[data-dsvs='on'] [class*='_codeHeader'] {
+  background-color: rgba(10, 14, 22, 0.82) !important;
+  border-color: rgba(255, 255, 255, 0.14) !important;
+}
+html[data-dsvs='on'] [class*='_codeHeader'] :where(span, button, div) { color: #b9c7d9 !important; }

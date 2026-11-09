@@ -126,7 +126,9 @@ function check() {
     ['正文浅墨 #eef3fa', /#eef3fa/],
     ['标题栏墨色', /_crumbCurrent/],
     ['侧栏层级', /sectionLabel/],
-    ['输入区缓升渐隐', /composerSeat/]
+    ['输入区缓升渐隐', /composerSeat/],
+    ['注入壁纸层兜底定位', /\[data-dsh-skin-layer='background'\]/],
+    ['代码块深玻璃', /rgba\(10,\s*14,\s*22,\s*0\.82\)/]
   ]
   log(`harness : ${HARNESS}`)
   log(`profile : ${PROFILE}`)
@@ -160,23 +162,21 @@ function writeVideoConfig() {
   const dest = join(MEDIA_DIR, `whale-fantasy${media.endsWith('.webm') ? '.webm' : '.mp4'}`)
   if (resolve(media) !== resolve(dest)) cpSync(media, dest)
   const cfg = existsSync(VIDEO_CFG) ? JSON.parse(readFileSync(VIDEO_CFG, 'utf8')) : {}
-  const next = {
-    ...cfg,
-    background: {
-      enabled: true,
-      file: dest,
-      mode: 'own',
-      veil: 0.22,
-      surface: 0.28,
-      surfaceLight: 0.6,
-      veilLight: 0.2,
-      panel: 0,
-      controls: true,
-      delayMs: 1200,
-      playbackRate: 1,
-      ...(cfg.background || {})
-    }
+  const base = {
+    enabled: true,
+    file: dest,
+    mode: 'own',
+    veil: 0.22,
+    surface: 0.28,
+    surfaceLight: 0.6,
+    veilLight: 0.2,
+    panel: 0,
+    controls: true,
+    delayMs: 1200,
+    playbackRate: 1
   }
+  // 用户已调过的键一个都不动，只补缺失的
+  const next = { ...cfg, background: { ...base, ...(cfg.background || {}), file: (cfg.background && cfg.background.file) || dest } }
   backup(VIDEO_CFG)
   writeFileSync(VIDEO_CFG, JSON.stringify(next, null, 2) + '\n')
   log(`  · 壁纸已指向 ${dest}`)
@@ -233,7 +233,7 @@ if (existsSync(TARGET)) {
 }
 rmSync(TARGET, { recursive: true, force: true })
 mkdirSync(TARGET, { recursive: true })
-for (const f of ['index.js', 'cordis.patch.yml', 'package.json', 'skin.css']) {
+for (const f of ['index.js', 'cordis.patch.yml', 'package.json', 'skin.css', 'patches.css']) {
   cpSync(join(ROOT, f), join(TARGET, f))
 }
 for (const d of ['assets', 'preview']) {

@@ -68,6 +68,7 @@ node scripts/apply-whale-fantasy.mjs --uninstall
 | 输入区底部「完全权限 / 回退 / 模型名」 | `#61666b` | `#b9c2cf` |
 | 底部统计行 | 近黑 | `#e6ebf3` |
 | 顶部标签页（标准模式 / 各类模式） | 近黑 | 浅灰白 |
+| 代码块（` ```yaml ` 这类围栏） | 深底压近黑字，基本看不见 | 深玻璃 `rgba(10,14,22,.82)` + 1px 白边 + 浅色等宽字 |
 
 ### 侧栏层级
 
@@ -77,6 +78,11 @@ node scripts/apply-whale-fantasy.mjs --uninstall
 - 会话标题 `#b9c4d3`，选中态 `#ffffff`
 - 时间戳 `#86909f`
 - 分组名（工作区 / 未分组）`#7f8a9a` + 600 字重
+
+### 结构性 bug（这两条最容易让别人「装上就废」）
+
+1. **注入的壁纸层没有定位** —— `index.js` 会 `body.prepend` 一个 `<div data-dsh-skin-layer="background">` 里塞 `<video>`，但插件自己没给它任何 CSS。只要别的皮肤/运行时不再顺手接管这一层，它就退化成「0 宽、视频按原始比例撑出 859px 高」的文档流块，**把 `#root` 整个顶到第二屏**——用户看到的就是「界面只剩壁纸」。本版把它钉成 `position: fixed; inset: 0; z-index: -1` + `video { object-fit: cover }`，任何环境下都不再挤占布局。
+2. **`patches.css` 是必需文件** —— 样式路由无条件 `readFile(patches.css)` 再与 `skin.css` 拼接，文件缺一个就直接 `500`，整张皮肤表加载失败。本仓库保留一个空壳文件并在安装脚本里强制拷贝。
 
 ### 残影 / 硬边
 
@@ -112,6 +118,7 @@ node scripts/apply-whale-fantasy.mjs --uninstall
 skin.css                          载体：全部视觉规则都在这张表里
 index.js                          宿主插件（与上游逐字节一致，未改）
 cordis.patch.yml                  插入一行的补丁描述
+patches.css                       必须存在的空壳（插件 handler 无条件读取它，缺文件整张表 500）
 assets/                           皮肤素材（壁纸循环、设置页背景）
 preview/preview-schematic.png     皮肤中心用的小图（合成示意）
 scripts/apply-whale-fantasy.mjs   安装 / 体检 / 卸载
@@ -125,6 +132,24 @@ package.json                      DSH 插件清单（dsh.bundle.patch 指向 cor
 - DSH Desktop **0.13.0**（Electron），macOS 已验证；Linux / Windows 由脚本按各自 `harness` 路径适配，未逐台实机验证。
 - 类名是构建哈希，DSH 大版本升级后若哈希全变，`[class*='...']` 这类结构选择器通常仍能命中；命中不了的部分按上文的排查顺序补（先查叶子节点 `color` → 再查哪个祖先在 `background` 上刷了不透明色 → 最后看 `::after`）。
 - 与 `dsh-video-skin` 的 `veil` / `veilLight` / `surface` 是两套独立旋钮：皮肤管「元素级」着色，运行时管「全局」蒙层。壁纸发白时先调运行时的 `veilLight`，不要加在皮肤里。
+
+## 更新记录
+
+### 1.1.1
+
+- 修：注入壁纸层无定位导致 `#root` 被顶到第二屏（见上文「结构性 bug」第 1 条）
+- 修：`patches.css` 缺失导致样式路由 500
+- 修：代码块在深壁纸下几乎不可读
+- 安装脚本：只补缺失的 `dsh-video-skin` 配置键，不再覆盖用户已调好的 `veil` / `veilLight`
+- 自检扩到 10 项，CI 同步
+
+### 1.1.0
+
+- 正文 / 标题 / 行内代码 / 链接 / 占位符 / 统计行改为浅色墨
+- 侧栏四档层级
+- 输入区底座渐隐改为整段缓升，去掉首页可见横带
+- `#dsvs-backdrop` 反制浅色面纱
+- 新增安装脚本、载体自检与 CI
 
 ## 许可
 

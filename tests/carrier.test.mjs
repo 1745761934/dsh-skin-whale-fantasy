@@ -24,8 +24,10 @@ const required = [
   ['正文浅墨', /#eef3fa/],
   ['行内代码', /#d8ecff/],
   ['侧栏层级', /sectionLabel/],
-  ['输入区缓升渐隐', /composerSeat/]
+  ['输入区缓升渐隐', /composerSeat/],
+  ['注入壁纸层兜底定位', /\[data-dsh-skin-layer='background'\]/],
+  ['代码块深玻璃', /rgba\(10,\s*14,\s*22,\s*0\.82\)/]
 ]
 for (const [name, re] of required) assert.match(css, re, `缺少关键规则：${name}`)
 
-console.log(`carrier ok — ${css.length} 字节，${open} 条规则块，8/8 关键项`)
+console.log(`carrier ok — ${css.length} 字节，${open} 条规则块，${required.length}/${required.length} 关键项`)
