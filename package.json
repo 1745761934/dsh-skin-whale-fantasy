@@ -17,6 +17,7 @@
     "index.js",
     "cordis.patch.yml",
     "skin.css",
+    "patches.css",
     "assets"
   ],
   "engines": {
