@@ -1,0 +1,46 @@
+{
+  "name": "dsh-skin-whale-fantasy",
+  "version": "1.1.0",
+  "description": "Whale-girl fantasy wallpaper for DSH Desktop: whale-girl video wallpaper behind a glass UI, with every low-contrast surface fixed for a dark backdrop. Standalone, self-contained host plugin.",
+  "type": "module",
+  "main": "./index.js",
+  "exports": {
+    ".": "./index.js",
+    "./package.json": "./package.json"
+  },
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    }
+  },
+  "files": [
+    "index.js",
+    "cordis.patch.yml",
+    "skin.css",
+    "assets",
+    "preview"
+  ],
+  "engines": {
+    "node": ">=20"
+  },
+  "keywords": [
+    "dsh",
+    "dsh-skin",
+    "deepseek-harness",
+    "harness",
+    "whale",
+    "wallpaper",
+    "fantasy",
+    "深色壁纸",
+    "皮肤"
+  ],
+  "license": "CC-BY-NC-SA-4.0",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/1745761934/dsh-skin-whale-fantasy.git"
+  },
+  "homepage": "https://github.com/1745761934/dsh-skin-whale-fantasy#readme",
+  "bugs": {
+    "url": "https://github.com/1745761934/dsh-skin-whale-fantasy/issues"
+  }
+}

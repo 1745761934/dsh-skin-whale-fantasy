@@ -1,0 +1,6 @@
+# dsh-skin-whale-fantasy: one inserted row. index.js serves the skin sheet
+# (styles + patches + media) and the static files it references; nothing in
+# the host tree is patched.
+- insert:
+    - id: skin-whale-fantasy
+      name: 'dsh-skin-whale-fantasy'

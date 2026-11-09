@@ -1,0 +1,358 @@
+/* 仅壁纸：不做整体换肤，只把官方主题的大面积背景 token 变透明，
+   让背景视频/壁纸透出来；文字、字体、控件颜色全部沿用官方主题。
+   DSH 会把 --dsw-* token 以 <style> 形式插在皮肤样式表之后（同等特异性、后者胜），
+   因此这里一律使用 !important，并且同时覆盖浅色与深色调色板。 */
+html,
+body {
+  background-color: transparent !important;
+}
+
+body,
+body[data-ds-dark-theme] {
+  --dsw-alias-bg-base: transparent !important;
+  --dsw-alias-bg-layer-1: transparent !important;
+  --dsw-alias-bg-layer-2: transparent !important;
+  --dsw-alias-bg-layer-3: transparent !important;
+  --dsw-alias-bg-mask-1: transparent !important;
+  --dsw-alias-bg-mask-2: transparent !important;
+  --dsw-alias-bg-mask-3: transparent !important;
+  --dsw-alias-specific-sidebar-fill: transparent !important;
+  --dsw-alias-specific-input-major: #1b1b1cf7 !important;
+  --dsw-alias-specific-bubble: #232324f2 !important;
+  --dsw-alias-specific-menu: #232324f2 !important;
+  --dsw-alias-markdown-code-block: #1b1b1ccc !important;
+}
+
+/* ------------------------------------------------------------------
+   壁纸场景的收尾（本皮肤自带，不依赖运行时注入）。
+   同时覆盖浅色与深色两套调色板，保证任何主题下外壳都是透明的。
+   ------------------------------------------------------------------ */
+html,
+body {
+  background-color: transparent !important;
+}
+
+html[data-dsvs='on']:has(body[data-ds-dark-theme]) {
+  background-color: #0e1116 !important;
+}
+
+/* 深色主题的兜底画布色：DSH 会把 --dsw-alias-bg-base 直接刷在 html/body 上 */
+body[data-ds-dark-theme] {
+  --dsw-alias-bg-base: transparent !important;
+  --dsw-alias-bg-layer-1: transparent !important;
+  --dsw-alias-bg-layer-2: transparent !important;
+  --dsw-alias-bg-layer-3: transparent !important;
+}
+
+#root,
+[data-app-frame],
+[data-app-frame] > div {
+  background-color: transparent !important;
+  background-image: none !important;
+}
+
+/* 帧级黑纱：skin-center 深色默认 0.86，视频完全看不见，收到 0.2 左右 */
+[data-app-frame] {
+  --skin-veil: rgba(6, 10, 20, 0.22);
+  --skin-veil-soft: rgba(6, 10, 20, 0.14);
+  --skin-veil-over: rgba(6, 10, 20, 0.12);
+}
+
+[data-conversation-scroll] {
+  background-color: transparent !important;
+  background-image: none !important;
+}
+
+/* 侧栏：站内覆盖把它压成 rgba(20,22,28,.52)+blur(26px)，这里收到同一档的深玻璃 */
+body .pI_x6G_sidebarCol {
+  background: rgba(6, 10, 20, 0.42) !important;
+  -webkit-backdrop-filter: blur(18px) saturate(1.1) !important;
+  backdrop-filter: blur(18px) saturate(1.1) !important;
+}
+body .pI_x6G_sidebarCol [class*='fade'] {
+  background-image: linear-gradient(rgba(6, 10, 20, 0), rgba(6, 10, 20, 0.92)) !important;
+}
+body .hHd-Xa_root .hHd-Xa_newSession {
+  background: rgba(255, 255, 255, 0.08) !important;
+  border-color: rgba(255, 255, 255, 0.16) !important;
+}
+
+/* 组件描边：skin-center 的 neon chrome 会给每个 button 上一圈 --skin-edge 描边
+   和一层浅渐变底，壁纸下会变成一格一格的玻璃砖。只摘描边与底，
+   hover / active / focus / 颜色文字全部沿用上游。 */
+body[data-skin-chrome] button,
+[data-app-frame] button,
+[class$='_panelRow'],
+[class$='_newSession'],
+[class$='_brand'] {
+  border-color: transparent !important;
+  background-image: none !important;
+  background-color: transparent !important;
+  box-shadow: none !important;
+}
+
+/* ------------------------------------------------------------------
+   左侧菜单栏：同款毛玻璃。
+   hHd-Xa_root 是侧栏内部的一整块不透明浅色底（来自 --dsw-alias-bg-base 的派生色），
+   只把 sidebarCol 做玻璃化会被它整块盖住，所以这里必须一起清掉。
+   侧栏底色本身固定为深色玻璃，因此文字/图标统一改成浅色墨色，
+   不跟随浅色主题（浅色主题下侧栏底部会变成白字白底）。
+   ------------------------------------------------------------------ */
+body .pI_x6G_sidebarCol {
+  background: rgba(20, 22, 28, 0.52) !important;
+  -webkit-backdrop-filter: blur(26px) saturate(1.15) !important;
+  backdrop-filter: blur(26px) saturate(1.15) !important;
+}
+body [class*='hHd-Xa_root'] {
+  background-color: transparent !important;
+}
+body .pI_x6G_sidebarCol,
+body .pI_x6G_sidebarCol *:not(svg):not(path) {
+  color: #e8eaf0 !important;
+}
+/* “deepseek HARNESS” 字标里的徽章反白块，浅色主题下会变成白底白字 */
+body .hHd-Xa_brandName svg path[fill*='label-primary-inverted'] {
+  fill: #232326 !important;
+}
+/* 新会话按钮：默认按钮填充来自 --dsw-alias-button-elevated-fill，浅色主题下是白底 */
+body .hHd-Xa_root .hHd-Xa_newSession {
+  background: rgba(255, 255, 255, 0.12) !important;
+  border-color: rgba(255, 255, 255, 0.22) !important;
+  color: #e8eaf0 !important;
+}
+body .hHd-Xa_root .hHd-Xa_newSession:hover {
+  background: rgba(255, 255, 255, 0.2) !important;
+}
+/* 侧栏底部那段白色渐隐（bhn1Oq_fade）原本是从侧栏底色渐变到透明，
+   底色透明后它会整条发白，改成从深色玻璃渐变到透明。 */
+body .pI_x6G_sidebarCol [class*='fade'] {
+  background-image: linear-gradient(rgba(20, 22, 28, 0), rgba(20, 22, 28, 0.92)) !important;
+}
+
+/* ------------------------------------------------------------------
+   浅色调色板的收尾。
+   DSH 的浅色面纱是 rgba(255,255,255,0.6) 刷在 conversation-panel /
+   会话根 / 空标签页宿主上，深色壁纸上会整片发灰白。
+   这里把这几层换成深色玻璃，墨色跟深色主题对齐，其余一律不动。
+   （composerSeat 那条渐隐带**不要动**：它浅色下本来就是白色渐隐，
+     跟深色玻璃的输入框对得上，改深反而会在半空切出一条硬线。）
+   ------------------------------------------------------------------ */
+html[data-dsvs='on'] {
+  background-color: #0e1116 !important;
+}
+
+[data-conversation-panel],
+[class*='_root']:has([class*='_scrollBody']),
+[class*='_emptyTabHost'] {
+  background-color: rgba(12, 15, 22, 0.42) !important;
+  background-image: none !important;
+}
+
+/* 浅色主题下正文墨色是近黑，深色壁纸上是黑压黑 */
+html[data-dsvs='on'] [data-conversation-panel] {
+  color: #e8eaf0 !important;
+}
+html[data-dsvs='on'] [data-conversation-panel] a,
+html[data-dsvs='on'] [data-conversation-panel] strong,
+html[data-dsvs='on'] [data-conversation-panel] h1,
+html[data-dsvs='on'] [data-conversation-panel] h2,
+html[data-dsvs='on'] [data-conversation-panel] h3 {
+  color: #f2f6ff !important;
+}
+/* 行内代码 / 引用块：浅色下是浅灰底配深字，深壁纸里会闪白条 */
+html[data-dsvs='on'] [data-conversation-panel] code {
+  background-color: rgba(255, 255, 255, 0.1) !important;
+  color: #cfe3ff !important;
+}
+html[data-dsvs='on'] [data-conversation-panel] blockquote {
+  background-color: rgba(255, 255, 255, 0.06) !important;
+  border-left-color: rgba(255, 255, 255, 0.24) !important;
+  color: #dbe6f5 !important;
+}
+
+/* 顶部 tab 栏 / 空标签页宿主：同样是半透明白，去掉就好 */
+html[data-dsvs='on'] [class*='_tabsBar'],
+html[data-dsvs='on'] [class*='_emptyTabHost'] {
+  background-color: transparent !important;
+}
+
+/* 输入框座椅的渐隐带浅色下是「透明 → 白 0.6」，在深壁纸上会切出一条浅底。
+   只换它的终点色，几何/层级不动。 */
+html[data-dsvs='on'] [class*='_composerSeat'] {
+  background-image: linear-gradient(rgba(12, 15, 22, 0) 0px, rgba(12, 15, 22, 0.78) 40px) !important;
+}
+
+/* 运行中的命令/工具行：浅色 token 给的是近白底 + 近黑字，在深壁纸上是一排白条 */
+html[data-dsvs='on'] [class*='_flowItem'],
+html[data-dsvs='on'] [class*='_toolRow'],
+html[data-dsvs='on'] [class*='_stepRow'] {
+  color: #cfd8e6 !important;
+}
+
+/* 会话区顶部的渐隐遮罩是「透明 → 白 0.2」，浅色下为了盖住滚动内容；
+   深壁纸上它是一条灰带。换成同色系的暗渐隐，位置和范围不变。 */
+html[data-dsvs='on'] [class*='_scrollBody'] > [class*='fade'],
+html[data-dsvs='on'] [class*='_scroll'] > [class*='fade'] {
+  background-image: linear-gradient(rgba(12, 15, 22, 0.72), rgba(12, 15, 22, 0)) !important;
+}
+
+/* dsh-video-skin 给浅色主题留的底色是 #eef1f5（它自己的浅色面纱），
+   深壁纸下 /theme 首帧会露出来 —— 这里是那条规则的反制。 */
+html[data-dsvs='on'] #dsvs-backdrop,
+body:not([data-ds-dark-theme]) #dsvs-backdrop {
+  background: #0e1116 !important;
+}
+
+/* 标题栏、tab 标签、工具条、右上角图标按钮：浅色 token 是近黑墨色，深壁纸上等于隐形 */
+html[data-dsvs='on'] [data-conversation-panel] {
+  --dsw-alias-text-primary: #e8eaf0;
+  --dsw-alias-text-secondary: #aab3c2;
+  --dsw-alias-text-tertiary: #8b95a6;
+}
+html[data-dsvs='on'] [class*='_crumbCurrent'],
+html[data-dsvs='on'] [class*='_titleRow'],
+html[data-dsvs='on'] [class*='_titleCluster'],
+html[data-dsvs='on'] [class*='_headerUtilities'],
+html[data-dsvs='on'] [class*='_headerCorner'],
+html[data-dsvs='on'] [class*='_headerActions'] button,
+html[data-dsvs='on'] [class*='_viewTabs'] button {
+  color: #e8eaf0 !important;
+}
+html[data-dsvs='on'] [class*='_viewTabs'] button:not([class*='_tabActive']) {
+  color: #8b95a6 !important;
+}
+
+/* flowItem 的 rgba(20,22,28,0.5) 暗色卡在深壁纸上会把壁纸整片压死；
+   降到 0.3，仍能托住正文，但不挡画面 */
+html[data-dsvs='on'] [class*='_flowItem'] {
+  background-color: rgba(20, 22, 28, 0.3) !important;
+}
+
+/* 会话列最终配比：面板 0.26 的暗玻璃，正文块 0.18，字加一层暗描边，
+   壁纸能透出来，字也不糊。 */
+html[data-dsvs='on'] [data-conversation-panel],
+html[data-dsvs='on'] [class*='_root']:has([class*='_scrollBody']) {
+  background-color: rgba(12, 15, 22, 0.26) !important;
+}
+html[data-dsvs='on'] [class*='EvIC1a_flowItem'] {
+  background-color: rgba(20, 22, 28, 0.18) !important;
+}
+html[data-dsvs='on'] [class*='EvIC1a_frame'],
+html[data-dsvs='on'] [class*='EvIC1a_scroll'],
+html[data-dsvs='on'] [class*='EvIC1a_column'] {
+  text-shadow: 0 1px 2px rgba(4, 8, 14, 0.75);
+}
+
+/* 浅色 token 把正文设成近黑 rgb(15,17,21)：在深壁纸上等于看不见。
+   这里把会话区、输入区、侧栏的文字链整条改成浅色墨。 */
+html[data-dsvs='on'] [data-conversation-panel],
+html[data-dsvs='on'] [data-composer-card],
+html[data-dsvs='on'] [class$='_sidebarCol'],
+html[data-dsvs='on'] [class*='wSkVaW_root'] {
+  color: #e6ebf3 !important;
+}
+html[data-dsvs='on'] [data-conversation-panel] :where(p, li, span, div, td, th, dt, dd, label, h1, h2, h3, h4, h5, h6, strong, em, b, i),
+html[data-dsvs='on'] [data-composer-card] :where(p, li, span, div, label, strong, em, b, i) {
+  color: #e6ebf3;
+}
+html[data-dsvs='on'] [data-conversation-panel] blockquote,
+html[data-dsvs='on'] [data-conversation-panel] :where(small, figcaption),
+html[data-dsvs='on'] [data-composer-card] :where(small, [class*='badge'], [class*='hint'], [class*='Muted'], [class*='muted']) {
+  color: #a9b3c2;
+}
+/* 行内代码 / 预格式化块浅色版 */
+html[data-dsvs='on'] [data-conversation-panel] :where(code, kbd, samp, pre),
+html[data-dsvs='on'] [data-composer-card] :where(code, kbd) {
+  color: #cfe0f7;
+  background-color: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.14);
+}
+html[data-dsvs='on'] [data-conversation-panel] :where(a) { color: #8ec2ff; }
+html[data-dsvs='on'] [data-conversation-panel] :where(hr) { border-color: rgba(255,255,255,0.16); }
+/* 表格线 */
+html[data-dsvs='on'] [data-conversation-panel] :where(td, th) { border-color: rgba(255,255,255,0.16); }
+/* 输入框本体与占位符 */
+html[data-dsvs='on'] [data-composer-card] :where(textarea, input) { color: #e6ebf3; }
+html[data-dsvs='on'] [data-composer-card] :where(textarea, input)::placeholder { color: #9aa4b4; }
+/* 底部状态条与下拉触发器（完全权限 / 回退 / 模型名） */
+html[data-dsvs='on'] [data-composer-card] :where([class*='trigger'], [class*='Trigger'], [class*='footer'], [class*='Footer'], [class*='stat'], [class*='Stat'], [class*='meta'], [class*='Meta']) {
+  color: #b9c2cf;
+}
+html[data-dsvs='on'] [data-composer-card] :where([class*='trigger'], [class*='Trigger']):hover { color: #e6ebf3; }
+html[data-dsvs='on'] [data-composer-card] :where(svg, [class*='icon'], [class*='Icon']) { color: #b9c2cf; fill: currentColor; }
+html[data-dsvs='on'] [data-composer-card] :where(button) { color: #b9c2cf; }
+html[data-dsvs='on'] [data-composer-card] :where(button:hover) { color: #e6ebf3; }
+
+/* 右栏「空面板」、输入框右侧「回退」、右下皮肤旋钮：同一条浅色墨链 */
+html[data-dsvs='on'] [class*='_empty_'] { color: #9aa4b4 !important; }
+html[data-dsvs='on'] [class*='dshp-rewind'] { color: #b9c2cf !important; }
+html[data-dsvs='on'] [id^='dsvs-knobs'] { color: #e6ebf3 !important; }
+html[data-dsvs='on'] [class*='_modelLabel'], html[data-dsvs='on'] [class*='_model'], html[data-dsvs='on'] [class*='_picker'] { color: #b9c2cf !important; }
+
+/* 输入区底座那片渐隐在「探索未至之境」首页会拉出一整块横条，
+   原因是它按 40px 就冲到 0.78。改成整段缓升，条带就没了。 */
+html[data-dsvs='on'] [class*='_composerSeat'] {
+  background-image: linear-gradient(
+    to bottom,
+    rgba(12, 15, 22, 0) 0%,
+    rgba(12, 15, 22, 0.34) 55%,
+    rgba(12, 15, 22, 0.72) 100%
+  ) !important;
+  background-size: 100% 100% !important;
+  background-repeat: no-repeat !important;
+}
+
+/* 正文墨色再提一档：会话区、输入卡、侧栏标题都由浅色 token 的 #0f1115 改成近白 */
+html[data-dsvs='on'] [data-conversation-panel] :where(p, li, span, div, td, th, dt, dd, label, strong, em, b, i) {
+  color: #eef3fa !important;
+}
+html[data-dsvs='on'] [data-conversation-panel] :where(h1, h2, h3, h4, h5, h6) { color: #ffffff !important; }
+html[data-dsvs='on'] [data-composer-card] :where(div, span, p, label) { color: #dfe6f0 !important; }
+html[data-dsvs='on'] [data-composer-card] :where([class*='placeholder'], textarea) { color: #c3ccda !important; }
+/* 顶部圆角面板块（新会话引导 / 空面板）底色再压一点，白字才站得住 */
+html[data-dsvs='on'] [class*='_emptyTabHost'],
+html[data-dsvs='on'] [class*='_pane_'] {
+  background-color: rgba(12, 15, 22, 0.34) !important;
+}
+/* 引用式小标签（modelChip / mode-action / hero chip）也统一成浅墨 */
+html[data-dsvs='on'] [class*='modeChip'],
+html[data-dsvs='on'] [class*='mode-action'],
+html[data-dsvs='on'] [class*='hero-chip'] {
+  color: #c9d3e1 !important;
+}
+
+/* 侧栏的层级被抹平了：标题、时间、分组名全是同一档 rgb(232,234,240)，
+   结果整列糊成一片。这里把三级层次重新拉开。 */
+html[data-dsvs='on'] [class='_sidebarCol'] { --dsw-alias-text-primary: #e9eef6; }
+html[data-dsvs='on'] [class$='_sidebarCol'] [class*='YDXeBa_time'] { color: #9aa4b4 !important; }
+html[data-dsvs='on'] [class$='_sidebarCol'] [class*='YAXha_time'] { color: #9aa4b4 !important; }
+html[data-dsvs='on'] [class$='_sidebarCol'] [class*='sectionLabel'] { color: #7f8a9a !important; font-weight: 600; }
+html[data-dsvs='on'] [class$='_sidebarCol'] [class*='panelTitle'] { color: #e9eef6 !important; }
+html[data-dsvs='on'] [class$='_sidebarCol'] [class*='YDXeBa_title'],
+html[data-dsvs='on'] [class$='_sidebarCol'] [class*='YAXha_title'] { color: #cdd6e3 !important; }
+html[data-dsvs='on'] [class$='_sidebarCol'] [class*='sessionRow']:hover [class*='title'] { color: #ffffff !important; }
+html[data-dsvs='on'] [class$='_sidebarCol'] [class*='YQXva_stackTitle'],
+html[data-dsvs='on'] [class$='_sidebarCol'] [class*='_key_'] { color: #98a3b3 !important; }
+
+/* 侧栏导航（工作台 / 插件 / 自动化任务 / 更多 / 会话）与二级小标题再压一档，
+   和会话标题拉开层次 */
+html[data-dsvs='on'] [class$='_sidebarCol'] [class*='hHd-Xa_root'] [class*='hHd-Xa_panelTitle'] { color: #dfe6ef !important; }
+html[data-dsvs='on'] [class$='_sidebarCol'] [class*='hHd-Xa_root'] span { color: #dfe6ef !important; }
+html[data-dsvs='on'] [class$='_sidebarCol'] [class*='_time_'], html[data-dsvs='on'] [class$='_sidebarCol'] [class*='_Time_'] { color: #93a0b1 !important; }
+
+/* 会话标题原色 #e9eef6 比导航还亮，读起来抢眼；压到次一级的灰白。
+   时间戳再淡一档，只在需要时被看见。 */
+html[data-dsvs='on'] [class$='_sidebarCol'] [class*='YDXeBa_title'],
+html[data-dsvs='on'] [class$='_sidebarCol'] [class*='YAXha_title'] { color: #b9c4d3 !important; }
+html[data-dsvs='on'] [class$='_sidebarCol'] [class*='YDXeBa_time'],
+html[data-dsvs='on'] [class$='_sidebarCol'] [class*='YAXha_time'] { color: #86909f !important; }
+html[data-dsvs='on'] [class$='_sidebarCol'] [class*='YDXeBa_selected'] [class*='YDXeBa_title'] { color: #ffffff !important; }
+
+/* 行内代码 / 文件引用的对比度补足 */
+html[data-dsvs='on'] [data-conversation-panel] :where(code, kbd, samp, [class*='inlineCode']) {
+  color: #d8ecff !important;
+  background-color: rgba(255, 255, 255, 0.14) !important;
+  border: 1px solid rgba(255, 255, 255, 0.12) !important;
+}
+html[data-dsvs='on'] [data-conversation-panel] [class*='fileMention'],
+html[data-dsvs='on'] [data-conversation-panel] a { color: #8fc4ff !important; }
