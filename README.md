@@ -109,14 +109,15 @@ node scripts/apply-whale-fantasy.mjs --uninstall
 ## 目录结构
 
 ```
-skin.css                     载体：全部视觉规则都在这张表里
-index.js                     宿主插件（与上游逐字节一致，未改）
-cordis.patch.yml             插入一行的补丁描述
-assets/                      皮肤素材（壁纸循环、设置页背景）
-preview/                     皮肤中心用的小图
+skin.css                          载体：全部视觉规则都在这张表里
+index.js                          宿主插件（与上游逐字节一致，未改）
+cordis.patch.yml                  插入一行的补丁描述
+assets/                           皮肤素材（壁纸循环、设置页背景）
+preview/preview-schematic.png     皮肤中心用的小图（合成示意）
 scripts/apply-whale-fantasy.mjs   安装 / 体检 / 卸载
-docs/preview.png             合成示意图
-package.json                 DSH 插件清单（dsh.bundle.patch 指向 cordis.patch.yml）
+tests/carrier.test.mjs            载体自检（CI 也跑这个）
+docs/preview.png                  本 README 的预览图
+package.json                      DSH 插件清单（dsh.bundle.patch 指向 cordis.patch.yml）
 ```
 
 ## 兼容性

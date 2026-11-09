@@ -7,7 +7,7 @@ import { strict as assert } from 'node:assert'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
-const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..', 'skin')
+const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..')
 const css = readFileSync(join(ROOT, 'skin.css'), 'utf8')
 
 const open = (css.match(/{/g) || []).length
