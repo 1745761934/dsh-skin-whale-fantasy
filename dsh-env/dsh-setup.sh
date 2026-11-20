@@ -135,21 +135,43 @@ N_SKILL=$(find "$L/dsh-reverse-skill/skills" -name "SKILL.md" 2>/dev/null | wc -
 ok "逆向技能数 $N_SKILL"
 
 # ═══ 4. 皮肤 / VNC（从仓库 dsh-env 拷，有就用，没有就跳过）═══════
-step "4. 皮肤 / VNC（可选）"
+step "4. 皮肤 / VNC"
+
+# 4.0 先把 Git LFS 的大文件拉成真身（mp4 克隆下来只是 130 字节指针）
+PLUGDIR="$REPO_DIR/dsh-env/plugins"
+if [ -d "$PLUGDIR/dsh-video-skin" ]; then
+  PTR=$(find "$PLUGDIR" -name "*.mp4" -size -1k 2>/dev/null | wc -l | tr -d ' ')
+  if [ "${PTR:-0}" -gt 0 ]; then
+    warn "检测到 $PTR 个 LFS 指针文件，正在拉取真实视频（约 20MB）"
+    if command -v git-lfs >/dev/null 2>&1; then
+      ( cd "$REPO_DIR" && git lfs install --local >/dev/null 2>&1; git lfs pull 2>&1 | tail -3 )
+    else
+      bad "未安装 git-lfs —— 请先 brew install git-lfs，或从主力机 AirDrop 这三个 mp4"
+    fi
+    PTR2=$(find "$PLUGDIR" -name "*.mp4" -size -1k 2>/dev/null | wc -l | tr -d ' ')
+    [ "${PTR2:-0}" -eq 0 ] && ok "LFS 视频已就位" || warn "仍有 $PTR2 个指针文件，皮肤视频会缺失（不影响破甲功能）"
+  fi
+fi
+
 OPT_OK=1
 for d in dsh-skin-whale-fantasy dsh-video-skin dsh-vnc-bridge; do
-  if [ -f "$L/$d/package.json" ]; then continue; fi
-  if [ -d "$REPO_DIR/dsh-env/plugins/$d" ]; then
-    cp -a "$REPO_DIR/dsh-env/plugins/$d" "$L/" && ok "复制 $d"
+  if [ -f "$L/$d/package.json" ]; then ok "$d 已存在"; continue; fi
+  if [ -d "$PLUGDIR/$d" ]; then
+    cp -a "$PLUGDIR/$d" "$L/" && ok "复制 $d"
+    # 视频缺失时只警告，不降级为最小配置（插件本身能跑，只是没背景）
+    if [ "$d" = "dsh-video-skin" ]; then
+      SMALL=$(find "$L/$d" -name "*.mp4" -size -1k 2>/dev/null | wc -l | tr -d ' ')
+      [ "${SMALL:-0}" -gt 0 ] && warn "$d 视频仍是指针，背景动画会缺失"
+    fi
   else
-    warn "$d 缺失（跳过，用最小配置）"; OPT_OK=0
+    warn "$d 不在仓库里（跳过）"; OPT_OK=0
   fi
 done
 if [ ! -f "$L/@deepseek-ai/dsh-client-ui-sidebar-vnc/package.json" ]; then
-  if [ -d "$REPO_DIR/dsh-env/plugins/sidebar-vnc" ]; then
-    cp -a "$REPO_DIR/dsh-env/plugins/sidebar-vnc" "$L/@deepseek-ai/dsh-client-ui-sidebar-vnc" && ok "复制 sidebar-vnc"
+  if [ -d "$PLUGDIR/sidebar-vnc" ]; then
+    cp -a "$PLUGDIR/sidebar-vnc" "$L/@deepseek-ai/dsh-client-ui-sidebar-vnc" && ok "复制 sidebar-vnc"
   else
-    warn "sidebar-vnc 缺失（跳过）"; OPT_OK=0
+    warn "sidebar-vnc 不在仓库里（跳过）"; OPT_OK=0
   fi
 fi
 
