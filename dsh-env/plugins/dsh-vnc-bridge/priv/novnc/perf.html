@@ -1,0 +1,35 @@
+<!DOCTYPE html><html><head><meta charset="utf-8"></head><body>
+<div id="screen" style="width:960px;height:540px"></div>
+<pre id="out" style="font:12px monospace"></pre>
+<script src="/dsh-vnc-novnc/novnc-bundle.js"></script>
+<script>
+const out = m => { document.getElementById('out').textContent += m + '\n' }
+;(async () => {
+  let pw = ''
+  try { const r = await fetch('/dsh-vnc'); if (r.ok) pw = (await r.json()).proxyPassword || '' } catch {}
+  const b = window.__dshNoVncBundle
+  if (!b || !b.RFB) { out('no bundle'); document.title='FAIL'; return }
+  const rfb = new b.RFB(document.getElementById('screen'), 'ws://127.0.0.1:43129/dsh-vnc', {
+    wsProtocols: ['binary'], credentials: { password: pw } })
+  rfb.scaleViewport = true
+  let frames = 0
+  rfb.addEventListener('connect', () => {
+    out('CONNECTED')
+    document.title = 'CONNECTED'
+    // 统计 framebuffer-update 事件
+    const draw = rfb._display
+    if (draw && draw._drawCtx) {
+      const orig = draw._drawCtx.putImageData.bind(draw._drawCtx)
+      draw._drawCtx.putImageData = function (...a) { frames++; return orig(...a) }
+    }
+    setTimeout(() => {
+      out('渲染帧数(10s): ' + frames + '  → ' + (frames/10).toFixed(1) + ' fps')
+      const c = document.querySelector('canvas')
+      out('canvas: ' + (c ? c.width + 'x' + c.height : 'none'))
+      document.title = 'DONE'
+    }, 10000)
+  })
+  rfb.addEventListener('disconnect', e => out('DISCONNECT clean=' + (e?.detail?.clean)))
+  out('RFB created')
+})()
+</script></body></html>

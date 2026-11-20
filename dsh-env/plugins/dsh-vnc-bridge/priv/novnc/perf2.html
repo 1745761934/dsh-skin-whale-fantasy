@@ -1,0 +1,50 @@
+<!DOCTYPE html><html><head><meta charset="utf-8"></head><body>
+<div id="screen" style="width:960px;height:540px"></div>
+<pre id="out" style="font:12px monospace"></pre>
+<script src="/dsh-vnc-novnc/novnc-bundle.js"></script>
+<script>
+const out = m => { document.getElementById('out').textContent += m + '\n' }
+;(async () => {
+  let pw = ''
+  try { const r = await fetch('/dsh-vnc'); if (r.ok) pw = (await r.json()).proxyPassword || '' } catch {}
+  const b = window.__dshNoVncBundle
+  const rfb = new b.RFB(document.getElementById('screen'), 'ws://127.0.0.1:43129/dsh-vnc', {
+    wsProtocols: ['binary'], credentials: { password: pw } })
+  rfb.scaleViewport = true
+  rfb.showDotCursor = false
+  let draws = 0, rafs = 0, maxGap = 0, last = 0
+  rfb.addEventListener('connect', () => {
+    out('CONNECTED')
+    const d = rfb._display
+    if (d && d._drawCtx) {
+      const orig = d._drawCtx.putImageData.bind(d._drawCtx)
+      d._drawCtx.putImageData = function (...a) {
+        draws++
+        const now = performance.now()
+        if (last) { const gap = now - last; if (gap > maxGap) maxGap = gap }
+        last = now
+        return orig(...a)
+      }
+    }
+    const loop = () => { rafs++; requestAnimationFrame(loop) }
+    requestAnimationFrame(loop)
+    // 每 100ms 滚动侧栏容器内的画面，制造变化
+    let pos = 0, dir = 1
+    setInterval(() => {
+      pos += dir * 40
+      if (pos > 400) dir = -1
+      if (pos < 0) dir = 1
+      const el = document.getElementById('screen')
+      if (el) el.scrollTop = pos
+    }, 100)
+    setTimeout(() => {
+      out(`putImageData: ${draws} → ${(draws/10).toFixed(1)} fps`)
+      out(`requestAnimationFrame: ${rafs} → ${(rafs/10).toFixed(1)} fps`)
+      out(`最大帧间隔: ${maxGap.toFixed(0)} ms`)
+      document.title = 'DONE'
+    }, 10000)
+  })
+  rfb.addEventListener('disconnect', e => out('DISCONNECT ' + (e?.detail?.clean)))
+  out('created')
+})()
+</script></body></html>

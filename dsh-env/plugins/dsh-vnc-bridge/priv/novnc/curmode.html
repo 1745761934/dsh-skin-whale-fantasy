@@ -1,0 +1,25 @@
+<!DOCTYPE html><html><head><meta charset="utf-8"></head><body>
+<div id="screen" style="width:800px;height:450px"></div><pre id="out" style="font:11px monospace"></pre>
+<script src="/dsh-vnc-novnc/novnc-bundle.js"></script>
+<script>
+const out = m => { document.getElementById('out').textContent += m + '\n' }
+;(async () => {
+  let pw=''; try { const r=await fetch('/dsh-vnc'); if(r.ok) pw=(await r.json()).proxyPassword||'' } catch {}
+  // 检查浏览器是否支持 cursor URI
+  const t = document.createElement('canvas')
+  t.style.cursor = 'url("data:image/x-icon;base64,AAACAAEACAgAAAIAAgA4AQAAFgAAACgAAAAIAAAAEAAAAAEAIAAAAAAAEAAAAAAAAAAAAAAAAAAAAAAAAAD/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////AAAAAAAAAAAAAAAAAAAAAA==") 2 2, default'
+  out('cursor URI 支持: ' + (t.style.cursor.indexOf('url') === 0))
+  const b = window.__dshNoVncBundle
+  const rfb = new b.RFB(document.getElementById('screen'), 'ws://127.0.0.1:43129/dsh-vnc',
+    { wsProtocols:['binary'], credentials:{ password: pw } })
+  rfb.scaleViewport = true; rfb.showDotCursor = false
+  rfb.addEventListener('connect', () => {
+    const cv = document.querySelector('canvas')
+    out('CONNECTED  目标 canvas: ' + cv.width + 'x' + cv.height)
+    out('computeStyle cursor: ' + (getComputedStyle(cv).cursor || '(空)').slice(0, 40))
+    out('body 里的 fixed canvas 数: ' + document.querySelectorAll('body > canvas').length)
+    out('showDotCursor=' + rfb.showDotCursor + '  _cursorImage=' + (rfb._cursorImage === b.RFB.cursors.none ? 'none' : 'real'))
+    document.title='DONE'
+  })
+})()
+</script></body></html>

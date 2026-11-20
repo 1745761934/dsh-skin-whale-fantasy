@@ -1,0 +1,28 @@
+<!DOCTYPE html><html><head><meta charset="utf-8"></head><body>
+<div id="screen" style="width:800px;height:450px"></div>
+<pre id="out" style="font:11px monospace"></pre>
+<script src="/dsh-vnc-novnc/novnc-bundle.js"></script>
+<script>
+const out = m => { document.getElementById('out').textContent += m + '\n' }
+;(async () => {
+  let pw = ''
+  try { const r = await fetch('/dsh-vnc'); if (r.ok) pw = (await r.json()).proxyPassword || '' } catch {}
+  out('password len: ' + pw.length)
+  const b = window.__dshNoVncBundle
+  out('bundle RFB: ' + typeof (b && b.RFB))
+  try {
+    const rfb = new b.RFB(document.getElementById('screen'), 'ws://127.0.0.1:43129/dsh-vnc', {
+      wsProtocols: ['binary'], credentials: { password: pw } })
+    rfb.scaleViewport = true
+    rfb.addEventListener('connect', () => { out('CONNECTED'); document.title = 'CONNECTED' })
+    rfb.addEventListener('disconnect', e => { out('DISCONNECT clean=' + (e?.detail?.clean)); })
+    rfb.addEventListener('securityfailure', e => { out('SECFAIL ' + JSON.stringify(e?.detail)); document.title = 'SECFAIL' })
+    out('RFB created')
+    setTimeout(() => {
+      const c = document.querySelector('canvas')
+      out('canvas: ' + (c ? c.width + 'x' + c.height : 'none'))
+      if (document.title !== 'CONNECTED') document.title = 'TIMEOUT'
+    }, 12000)
+  } catch (e) { out('EXC: ' + e.message); document.title = 'EXCEPTION' }
+})()
+</script></body></html>

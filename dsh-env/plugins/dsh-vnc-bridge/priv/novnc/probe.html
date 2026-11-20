@@ -1,0 +1,28 @@
+<!DOCTYPE html><html><head><meta charset="utf-8"></head><body>
+<div id="screen" style="width:960px;height:540px"></div><pre id="out" style="font:11px monospace"></pre>
+<script src="/dsh-vnc-novnc/novnc-bundle.js"></script>
+<script>
+const out = m => { document.getElementById('out').textContent += m + '\n' }
+;(async () => {
+  let pw=''; try { const r=await fetch('/dsh-vnc'); if(r.ok) pw=(await r.json()).proxyPassword||'' } catch {}
+  const b = window.__dshNoVncBundle
+  const rfb = new b.RFB(document.getElementById('screen'), 'ws://127.0.0.1:43129/dsh-vnc',
+    { wsProtocols:['binary'], credentials:{ password: pw } })
+  let n = 0
+  rfb.addEventListener('connect', () => {
+    out('CONNECTED ' + rfb._fbWidth + 'x' + rfb._fbHeight + ' bpp=' + rfb._fbBPP + ' depth=' + rfb._fbDepth)
+    const P = Object.getPrototypeOf(rfb._display)
+    const orig = P.blitImage
+    rfb._display.blitImage = function (x,y,w,h,arr,offset) {
+      if (n < 3) {
+        out(`blit x=${x} y=${y} w=${w} h=${h} len=${arr.length} off=${offset} ctor=${arr.constructor.name} bpe=${arr.BYTES_PER_ELEMENT}`)
+        out(`  期望 16bpp=${w*h*2}  32bpp=${w*h*4}  实际=${arr.length-offset}`)
+        n++
+      }
+      return orig.call(this, x,y,w,h,arr,offset,true)
+    }
+    setTimeout(()=>{ document.title='DONE' }, 8000)
+  })
+  out('created')
+})()
+</script></body></html>

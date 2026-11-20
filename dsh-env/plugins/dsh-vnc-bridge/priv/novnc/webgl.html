@@ -1,0 +1,89 @@
+<!DOCTYPE html><html><head><meta charset="utf-8"><style>
+body{margin:0;background:#000;font:11px monospace;color:#0f0}
+#wrap{position:relative;width:960px;height:540px}
+canvas{position:absolute;left:0;top:0;width:100%;height:100%}
+#out{position:absolute;left:0;top:550px;white-space:pre}
+</style></head><body>
+<div id="wrap"><canvas id="gl"></canvas><div id="screen" style="display:none"></div></div>
+<pre id="out"></pre>
+<script src="/dsh-vnc-novnc/novnc-bundle.js"></script>
+<script>
+const out = m => { document.getElementById('out').textContent += m + '\n' }
+;(async () => {
+  let pw = ''
+  try { const r = await fetch('/dsh-vnc'); if (r.ok) pw = (await r.json()).proxyPassword || '' } catch {}
+  const b = window.__dshNoVncBundle
+  const rfb = new b.RFB(document.getElementById('screen'), 'ws://127.0.0.1:43129/dsh-vnc', {
+    wsProtocols: ['binary'], credentials: { password: pw } })
+
+  const gl = document.getElementById('gl').getContext('webgl2', { alpha:false, desynchronized:true, preserveDrawingBuffer:false })
+  if (!gl) { out('WebGL2 不可用'); document.title='FAIL'; return }
+
+  const vs = `#version 300 es
+  in vec2 p; out vec2 uv;
+  void main(){ uv = vec2(p.x*0.5+0.5, 0.5-p.y*0.5); gl_Position = vec4(p,0,1); }`
+  const fs = `#version 300 es
+  precision highp float;
+  uniform sampler2D tex; in vec2 uv; out vec4 c;
+  void main(){ c = vec4(texture(tex, uv).rgb, 1.0); }`
+
+  const mk = (t, src) => { const s = gl.createShader(t); gl.shaderSource(s, src); gl.compileShader(s)
+    if (!gl.getShaderParameter(s, gl.COMPILE_STATUS)) { out('shader err: ' + gl.getShaderInfoLog(s)); return null } return s }
+  const prog = gl.createProgram()
+  gl.attachShader(prog, mk(gl.VERTEX_SHADER, vs)); gl.attachShader(prog, mk(gl.FRAGMENT_SHADER, fs))
+  gl.linkProgram(prog)
+  if (!gl.getProgramParameter(prog, gl.LINK_STATUS)) { out('link err'); return }
+  gl.useProgram(prog)
+
+  const buf = gl.createBuffer()
+  gl.bindBuffer(gl.ARRAY_BUFFER, buf)
+  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1,-1, 1,-1, -1,1, 1,1]), gl.STATIC_DRAW)
+  const loc = gl.getAttribLocation(prog, 'p')
+  gl.enableVertexAttribArray(loc); gl.vertexAttribPointer(loc, 2, gl.FLOAT, false, 0, 0)
+
+  const tex = gl.createTexture()
+  gl.bindTexture(gl.TEXTURE_2D, tex)
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST)
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST)
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE)
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE)
+  gl.uniform1i(gl.getUniformLocation(prog, 'tex'), 0)
+
+  let uploads = 0, t0 = 0, W = 0, H = 0, totalMs = 0
+
+  // 直接把 16bpp RGB565 的 Raw 数据上传成纹理
+  const upload = (arr, w, h) => {
+    if (w !== W || h !== H) { W = w; H = h; gl.texImage2D(gl.TEXTURE_2D,0,gl.RGB565,w,h,0,gl.RGB,gl.UNSIGNED_SHORT_5_6_5,null) }
+    const t = performance.now()
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGB565, w, h, 0, gl.RGB, gl.UNSIGNED_SHORT_5_6_5, new Uint16Array(arr.buffer, arr.byteOffset, w*h))
+    totalMs += performance.now() - t
+    uploads++
+    gl.viewport(0,0,gl.drawingBufferWidth,gl.drawingBufferHeight)
+    gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4)
+  }
+
+  rfb.addEventListener('connect', () => {
+    out('CONNECTED fb=' + rfb._fbWidth + 'x' + rfb._fbHeight)
+    const d = rfb._display
+    // 劫持 blitImage：拿到原始像素，走 WebGL
+    const orig = Object.getPrototypeOf(d).blitImage
+    d.blitImage = function (x, y, w, h, arr, offset) {
+      if (x === 0 && y === 0 && w === this._fbWidth && h === this._fbHeight && arr.length >= w*h*2) {
+        upload(arr, w, h)
+      } else {
+        return orig.call(this, x, y, w, h, arr, offset, true)
+      }
+    }
+    d.flip = function () {}
+    t0 = performance.now()
+    setTimeout(() => {
+      const secs = (performance.now() - t0) / 1000
+      out(`WebGL texImage2D: ${uploads} → ${(uploads/secs).toFixed(1)} fps`)
+      out(`上传累计 ${totalMs.toFixed(0)}ms  平均 ${(totalMs/Math.max(1,uploads)).toFixed(2)}ms`)
+      out(`纹理 ${W}x${H}`)
+      document.title = 'DONE'
+    }, 10000)
+  })
+  out('created webgl2=' + !!gl)
+})()
+</script></body></html>

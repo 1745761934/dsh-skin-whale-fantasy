@@ -1,0 +1,38 @@
+<!DOCTYPE html><html><head><meta charset="utf-8"></head><body>
+<div id="screen" style="width:800px;height:450px"></div><pre id="out" style="font:11px monospace"></pre>
+<script src="/dsh-vnc-novnc/novnc-bundle.js"></script>
+<script>
+const out = m => { document.getElementById('out').textContent += m + '\n' }
+;(async () => {
+  let pw=''; try { const r=await fetch('/dsh-vnc'); if(r.ok) pw=(await r.json()).proxyPassword||'' } catch {}
+  const b = window.__dshNoVncBundle
+  const rfb = new b.RFB(document.getElementById('screen'), 'ws://127.0.0.1:43129/dsh-vnc',
+    { wsProtocols:['binary'], credentials:{ password: pw } })
+  rfb.scaleViewport = true; rfb.showDotCursor = false
+  let fbu = 0, flushCalls = 0, flips = 0, rqLen = 0, rqMax = 0
+  rfb.addEventListener('connect', () => {
+    out('CONNECTED')
+    const d = rfb._display, P = Object.getPrototypeOf(d)
+    // 数 FramebufferUpdate 消息
+    const origProc = rfb._framebufferUpdate
+    rfb._framebufferUpdate = function () { fbu++; return origProc.call(this) }
+    // 数 flush 调用
+    const oflush = P.flush
+    d.flush = function () { flushCalls++; return oflush.call(this) }
+    const of_ = P.flip
+    d.flip = () => { flips++; rqLen = d._renderQ.length; if(rqLen>rqMax) rqMax=rqLen; return of_.call(d,true) }
+    let i = 0
+    setInterval(() => {
+      i++
+      try { rfb.sendPointerEvent(300+Math.sin(i/3)*200, 300+Math.cos(i/3)*150, []) } catch {}
+    }, 16)
+    setTimeout(() => {
+      out(`FramebufferUpdate ${fbu}`)
+      out(`flip ${flips}   flush调用 ${flushCalls}`)
+      out(`renderQ 峰值 ${rqMax}  当前 ${rqLen}`)
+      out(`_enabledContinuousUpdates=${rfb._enabledContinuousUpdates}`)
+      document.title='DONE'
+    }, 10000)
+  })
+})()
+</script></body></html>

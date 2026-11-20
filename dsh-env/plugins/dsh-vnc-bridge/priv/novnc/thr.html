@@ -1,0 +1,21 @@
+<!DOCTYPE html><html><head><meta charset="utf-8"></head><body>
+<div id="screen" style="width:800px;height:450px"></div><pre id="out" style="font:11px monospace"></pre>
+<script src="/dsh-vnc-novnc/novnc-bundle.js"></script>
+<script>
+const out = m => { document.getElementById('out').textContent += m + '\n' }
+;(async () => {
+  let pw=''; try { const r=await fetch('/dsh-vnc'); if(r.ok) pw=(await r.json()).proxyPassword||'' } catch {}
+  const b = window.__dshNoVncBundle
+  const rfb = new b.RFB(document.getElementById('screen'), 'ws://127.0.0.1:43129/dsh-vnc',
+    { wsProtocols:['binary'], credentials:{ password: pw } })
+  rfb.scaleViewport = true; rfb.showDotCursor = false
+  let flips=0
+  rfb.addEventListener('connect', () => {
+    out('CONNECTED ' + rfb._fbWidth + 'x' + rfb._fbHeight)
+    const d = rfb._display, P = Object.getPrototypeOf(d), of_ = P.flip
+    d.flip = () => { flips++; return of_.call(d, true) }
+    setTimeout(() => { out('flip ' + flips + ' → ' + (flips/10).toFixed(1) + ' fps'); document.title='DONE' }, 10000)
+  })
+  rfb.addEventListener('disconnect', e => { out('DISCONNECT ' + e?.detail?.clean); document.title='DISC' })
+})()
+</script></body></html>

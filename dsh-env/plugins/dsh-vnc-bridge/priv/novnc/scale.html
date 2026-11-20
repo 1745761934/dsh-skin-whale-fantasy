@@ -1,0 +1,39 @@
+<!DOCTYPE html><html><head><meta charset="utf-8"></head><body>
+<div id="screen" style="width:420px;height:236px"></div><pre id="out" style="font:11px monospace"></pre>
+<script src="/dsh-vnc-novnc/novnc-bundle.js"></script>
+<script>
+const out = m => { document.getElementById('out').textContent += m + '\n' }
+;(async () => {
+  let pw=''; try { const r=await fetch('/dsh-vnc'); if(r.ok) pw=(await r.json()).proxyPassword||'' } catch {}
+  const b = window.__dshNoVncBundle
+  const rfb = new b.RFB(document.getElementById('screen'), 'ws://127.0.0.1:43129/dsh-vnc',
+    { wsProtocols:['binary'], credentials:{ password: pw } })
+  // 关键对比：关闭缩放
+  rfb.scaleViewport = false
+  rfb.clipViewport = false
+  rfb.showDotCursor = false
+  let flips=0, drawMs=0, maxGap=0, last=0
+  rfb.addEventListener('connect', () => {
+    out('CONNECTED fb=' + rfb._fbWidth + 'x' + rfb._fbHeight)
+    const d = rfb._display, P = Object.getPrototypeOf(d)
+    const of_ = P.flip
+    d.flip = () => {
+      const t = performance.now()
+      const r = of_.call(d, true)
+      drawMs += performance.now() - t
+      flips++
+      const n = performance.now(); if(last){const g=n-last; if(g>maxGap)maxGap=g} last=n
+      return r
+    }
+    let i=0
+    setInterval(() => { i++; try { rfb.sendPointerEvent(300+Math.sin(i/3)*200, 300+Math.cos(i/3)*150, []) } catch {} }, 16)
+    setTimeout(() => {
+      out(`flip ${flips} → ${(flips/10).toFixed(1)} fps`)
+      out(`累计绘制耗时 ${drawMs.toFixed(0)}ms  平均 ${(drawMs/Math.max(1,flips)).toFixed(2)}ms`)
+      out(`最大帧间隔 ${maxGap.toFixed(0)}ms`)
+      out(`canvas 尺寸 ${rfb._display._target.width}x${rfb._display._target.height}`)
+      document.title='DONE'
+    }, 10000)
+  })
+})()
+</script></body></html>

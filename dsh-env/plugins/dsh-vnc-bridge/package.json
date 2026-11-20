@@ -1,0 +1,20 @@
+{
+  "name": "dsh-vnc-bridge",
+  "version": "0.1.0",
+  "private": true,
+  "description": "同源 /dsh-vnc WebSocket 代理 + noVnc 静态资源，让侧栏「远程桌面」tab 直连目标机 VNC 服务端。",
+  "type": "module",
+  "main": "lib/index.js",
+  "exports": {
+    ".": {
+      "default": "./lib/index.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "dsh": {
+    "platform": "web"
+  },
+  "dependencies": {
+    "@novnc/novnc": "^1.5.0"
+  }
+}

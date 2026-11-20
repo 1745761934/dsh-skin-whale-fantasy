@@ -1,0 +1,30 @@
+<!DOCTYPE html><html><head><meta charset="utf-8"></head><body>
+<div id="screen" style="width:800px;height:450px"></div><pre id="out" style="font:11px monospace"></pre>
+<script src="/dsh-vnc-novnc/novnc-bundle.js"></script>
+<script>
+const out = m => { document.getElementById('out').textContent += m + '\n' }
+;(async () => {
+  let pw=''; try { const r=await fetch('/dsh-vnc'); if(r.ok) pw=(await r.json()).proxyPassword||'' } catch {}
+  const b = window.__dshNoVncBundle
+  const rfb = new b.RFB(document.getElementById('screen'), 'ws://127.0.0.1:43129/dsh-vnc',
+    { wsProtocols:['binary'], credentials:{ password: pw } })
+  rfb.addEventListener('connect', () => {
+    out('CONNECTED ' + rfb._fbWidth + 'x' + rfb._fbHeight)
+    // 记录实际发出的 fbUpdateRequest 字节
+    const orig = b.RFB.messages.fbUpdateRequest
+    let cnt = 0, samples = []
+    b.RFB.messages.fbUpdateRequest = function (sock, inc, x, y, w, h) {
+      cnt++
+      if (samples.length < 4) samples.push(`inc=${inc} x=${x} y=${y} w=${w} h=${h}`)
+      return orig.call(this, sock, inc, x, y, w, h)
+    }
+    let fbu = 0, ofu = rfb._framebufferUpdate
+    rfb._framebufferUpdate = function () { fbu++; return ofu.call(this) }
+    setTimeout(() => {
+      out(`10 秒发出请求 ${cnt} 次   收到更新 ${fbu} 次`)
+      samples.forEach(s => out('  样例: ' + s))
+      document.title = 'DONE'
+    }, 10000)
+  })
+})()
+</script></body></html>

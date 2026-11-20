@@ -1,0 +1,36 @@
+<!DOCTYPE html><html><head><meta charset="utf-8"></head><body>
+<div id="screen" style="width:960px;height:540px"></div>
+<pre id="out" style="font:11px monospace"></pre>
+<script src="/dsh-vnc-novnc/novnc-bundle.js"></script>
+<script>
+const out = m => { document.getElementById('out').textContent += m + '\n' }
+;(async () => {
+  let pw = ''
+  try { const r = await fetch('/dsh-vnc'); if (r.ok) pw = (await r.json()).proxyPassword || '' } catch {}
+  const b = window.__dshNoVncBundle
+  const rfb = new b.RFB(document.getElementById('screen'), 'ws://127.0.0.1:43129/dsh-vnc', {
+    wsProtocols: ['binary'], credentials: { password: pw } })
+  rfb.scaleViewport = true; rfb.showDotCursor = false
+  // 渲染直通
+  const P = Object.getPrototypeOf(rfb._display)
+  const ob = P.blitImage
+  rfb._display.blitImage = function (x,y,w,h,a,o) { return ob.call(this,x,y,w,h,a,o,true) }
+  const of_ = P.flip
+  rfb._display.flip = function () { return of_.call(this,true) }
+  let draws = 0, rq = 0
+  rfb.addEventListener('connect', () => {
+    out('CONNECTED fb=' + rfb._fbWidth + 'x' + rfb._fbHeight)
+    const d = rfb._display
+    const op = d._drawCtx.putImageData.bind(d._drawCtx)
+    d._drawCtx.putImageData = function (...a) { draws++; return op(...a) }
+    const oq = d._renderQPush.bind(d)
+    d._renderQPush = function (...a) { rq++; return oq(...a) }
+    setTimeout(() => {
+      out(`putImageData ${draws} → ${(draws/10).toFixed(1)} fps`)
+      out(`_renderQPush ${rq}  （直通后应接近 0）`)
+      document.title = 'DONE'
+    }, 10000)
+  })
+  out('created')
+})()
+</script></body></html>

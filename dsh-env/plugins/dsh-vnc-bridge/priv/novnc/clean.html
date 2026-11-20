@@ -1,0 +1,35 @@
+<!DOCTYPE html><html><head><meta charset="utf-8"></head><body>
+<div id="screen" style="width:960px;height:540px"></div><pre id="out" style="font:11px monospace"></pre>
+<script src="/dsh-vnc-novnc/novnc-bundle.js"></script>
+<script>
+const out = m => { document.getElementById('out').textContent += m + '\n' }
+;(async () => {
+  let pw=''; try { const r=await fetch('/dsh-vnc'); if(r.ok) pw=(await r.json()).proxyPassword||'' } catch {}
+  const b = window.__dshNoVncBundle
+  const rfb = new b.RFB(document.getElementById('screen'), 'ws://127.0.0.1:43129/dsh-vnc',
+    { wsProtocols:['binary'], credentials:{ password: pw } })
+  rfb.scaleViewport = true; rfb.showDotCursor = false
+  let flips = 0, blits = 0, pixels = 0, putMs = 0, maxGap = 0, last = 0
+  rfb.addEventListener('connect', () => {
+    out('CONNECTED ' + rfb._fbWidth + 'x' + rfb._fbHeight + ' depth=' + rfb._fbDepth)
+    const d = rfb._display, P = Object.getPrototypeOf(d)
+    const ob = P.blitImage
+    d.blitImage = function (x,y,w,h,arr,off) { blits++; pixels += w*h; return ob.call(this,x,y,w,h,arr,off,true) }
+    const of_ = P.flip
+    d.flip = function () {
+      flips++
+      const now = performance.now()
+      if (last) { const g = now-last; if (g > maxGap) maxGap = g }
+      last = now
+      return of_.call(this, true)
+    }
+    setTimeout(() => {
+      out(`flip ${flips} → ${(flips/10).toFixed(1)} fps   blit ${blits}`)
+      out(`累计像素 ${(pixels/1e6).toFixed(2)}M   平均每帧 ${(pixels/Math.max(1,flips)/1000).toFixed(0)}K 像素`)
+      out(`最大帧间隔 ${maxGap.toFixed(0)} ms`)
+      document.title = 'DONE'
+    }, 10000)
+  })
+  out('created')
+})()
+</script></body></html>

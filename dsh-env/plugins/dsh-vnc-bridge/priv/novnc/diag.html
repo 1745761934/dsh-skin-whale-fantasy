@@ -1,0 +1,39 @@
+<!DOCTYPE html><html><head><meta charset="utf-8"></head><body>
+<div id="screen" style="width:960px;height:540px"></div>
+<pre id="out" style="font:11px monospace"></pre>
+<script src="/dsh-vnc-novnc/novnc-bundle.js"></script>
+<script>
+const out = m => { document.getElementById('out').textContent += m + '\n' }
+;(async () => {
+  let pw = ''
+  try { const r = await fetch('/dsh-vnc'); if (r.ok) pw = (await r.json()).proxyPassword || '' } catch {}
+  const b = window.__dshNoVncBundle
+  const rfb = new b.RFB(document.getElementById('screen'), 'ws://127.0.0.1:43129/dsh-vnc', {
+    wsProtocols: ['binary'], credentials: { password: pw } })
+  rfb.scaleViewport = true; rfb.showDotCursor = false
+  let draws = 0, rqPushes = 0, flips = 0, putMs = 0
+  rfb.addEventListener('connect', () => {
+    out('CONNECTED fb=' + rfb._fbWidth + 'x' + rfb._fbHeight)
+    const d = rfb._display
+    const orig = d._drawCtx.putImageData.bind(d._drawCtx)
+    d._drawCtx.putImageData = function (...a) {
+      const t = performance.now()
+      const r = orig(...a)
+      putMs += performance.now() - t
+      draws++
+      return r
+    }
+    const origFlip = d.flip.bind(d)
+    d.flip = function (...a) { flips++; return origFlip(...a) }
+    const oq = d._renderQPush.bind(d)
+    d._renderQPush = function (...a) { rqPushes++; return oq(...a) }
+    setTimeout(() => {
+      out(`putImageData ${draws} (${(draws/10).toFixed(1)}/s) 累计耗时 ${putMs.toFixed(0)}ms 平均 ${(putMs/Math.max(1,draws)).toFixed(1)}ms`)
+      out(`flip ${flips}  _renderQPush ${rqPushes}`)
+      out(`renderQ 长度 ${d._renderQ.length}`)
+      document.title = 'DONE'
+    }, 10000)
+  })
+  out('created')
+})()
+</script></body></html>
