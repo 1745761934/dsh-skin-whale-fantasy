@@ -1,0 +1,28 @@
+{
+  "name": "dsh-profile-web",
+  "private": true,
+  "dependencies": {
+    "dsh-purge-community": "file:./local-plugins/pkgs/dsh-purge-community-1.7.20.tgz",
+    "helm-d": "file:./local-plugins/pkgs/helm-d.tgz",
+    "dsh-skin-whale-fantasy": "file:./local-plugins/dsh-skin-whale-fantasy",
+    "dsh-video-skin": "file:./local-plugins/dsh-video-skin",
+    "dsh-vnc-bridge": "file:./local-plugins/dsh-vnc-bridge",
+    "@deepseek-ai/dsh-client-ui-sidebar-vnc": "file:./local-plugins/@deepseek-ai/dsh-client-ui-sidebar-vnc",
+    "@dhicoc/dsh-reverse-skill": "file:./local-plugins/dsh-reverse-skill"
+  },
+  "dsh": {
+    "profile": {
+      "bundles": [
+        "@deepseek-ai/dsh-base",
+        "@deepseek-ai/dsh-web-app",
+        "dsh-purge-community",
+        "helm-d",
+        "dsh-video-skin",
+        "dsh-skin-whale-fantasy",
+        "dsh-vnc-bridge",
+        "@deepseek-ai/dsh-client-ui-sidebar-vnc",
+        "@dhicoc/dsh-reverse-skill"
+      ]
+    }
+  }
+}
